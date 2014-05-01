@@ -17,10 +17,11 @@ import javax.swing.JPanel;
  */
 public class Game extends JPanel implements Move{
 
-    private static Random rnd = new Random();
+    private static final Random rnd = new Random();
     private final int SIZE;
     private Field[][] fields; // [->][^]
     private MovementListener keyboard;
+    private int moves;
     
     public Game(int size) {
         this.SIZE = size;
@@ -32,6 +33,7 @@ public class Game extends JPanel implements Move{
     }
 
     private void setup() {
+        this.moves = 0;
         this.fields = new Field[4][4];
         int interval;
         if(this.getWidth() > this.getHeight()){
@@ -47,8 +49,7 @@ public class Game extends JPanel implements Move{
                 fields[col][row] = new Field(x, y);
             }
         }
-        
-        this.keyboard = new MovementListener(this);
+
     }
 
     @Override
@@ -98,30 +99,44 @@ public class Game extends JPanel implements Move{
             return false;
         }
         Point choice = checkMap[rnd.nextInt(checkMap.length)];
-        fields[choice.x][choice.y].tryTouch();
+        System.out.println("InsertResult: " + fields[choice.x][choice.y].tryTouch());
+        this.repaint();
         return true;
     }
     
     @Override
     public boolean left() {
         boolean movedAny = false;
-        for(int row = 0; row < SIZE; row++){
-            for (int col = 1; col < SIZE; col++){
-                for(int i = col - 1; i >= 0; i--){
-                    int result = tryMove(fields[i + 1][row], fields[i + 1][row]);
-                    if(result == 1 || result == -1){
-                        if(result == 1){
-                            movedAny = true;
-                        }
-                        break;
-                    }else{
+        for (int row = 0; row < SIZE; row++){
+            int col = 1;
+            while(col < 4){
+
+                Field f_low = fields[col - 1][row];
+                Field f_high = fields[col][row];
+                
+                switch (f_low.addField(f_high)){
+                    case MERGED:
+                        col++;
                         movedAny = true;
-                    }
+                        f_low.setMerged(true);
+                        break;
+                    case MOVED:
+                        col--;
+                        movedAny = true;
+                        break;
+                    case NOACTION:
+                        col++;
+                        break;
+                }
+
+                if(col < 1){
+                    col = 1;
                 }
             }
         }
+        System.out.println("moved any: " + movedAny);
         if(movedAny){
-            insertRandom();
+            startNextRound();
         }
         return movedAny;
     }
@@ -129,44 +144,127 @@ public class Game extends JPanel implements Move{
     @Override
     public boolean right() {
         boolean movedAny = false;
-        for(int row = 0; row < SIZE; row++){
-            for (int col = SIZE - 2; col < SIZE; col--){
-                for(int i = col + 1; i < SIZE; i++){
-                    int result = tryMove(fields[i - 1][row], fields[i][row]);
-                    if(result == 1 || result == -1){
-                        if(result == 1){
-                            movedAny = true;
-                        }
-                        break;
-                    }else{
+        for (int row = 0; row < SIZE; row++){
+            int max = SIZE - 2;
+            int col = max;
+            while(col >= 0){
+
+                Field f_low = fields[col + 1][row];
+                Field f_high = fields[col][row];
+                
+                switch (f_low.addField(f_high)){
+                    case MERGED:
+                        col--;
                         movedAny = true;
-                    }
+                        f_low.setMerged(true);
+                        break;
+                    case MOVED:
+                        col++;
+                        movedAny = true;
+                        break;
+                    case NOACTION:
+                        col--;
+                        break;
+                }
+
+                if(col > max){
+                    col = max;
                 }
             }
         }
+        System.out.println("moved any: " + movedAny);
         if(movedAny){
-            insertRandom();
+            startNextRound();
         }
         return movedAny;
     }
 
     @Override
     public boolean up() {
-        return false;
+        boolean movedAny = false;
+        for (int col = 0; col < SIZE; col++){
+
+            int row = 1;
+            while(row < 4){
+
+                Field f_low = fields[col][row - 1];
+                Field f_high = fields[col][row];
+                
+                switch (f_low.addField(f_high)){
+                    case MERGED:
+                        row++;
+                        movedAny = true;
+                        f_low.setMerged(true);
+                        break;
+                    case MOVED:
+                        row--;
+                        movedAny = true;
+                        break;
+                    case NOACTION:
+                        row++;
+                        break;
+                }
+
+                if(row < 1){
+                    row = 1;
+                }
+            }
+        }
+        System.out.println("moved any: " + movedAny);
+        if(movedAny){
+            startNextRound();
+        }
+        return movedAny;
     }
 
     @Override
     public boolean down() {
-        return false;
+        boolean movedAny = false;
+        for (int col = 0; col < SIZE; col++){
+            int max = SIZE - 2;
+            int row = max;
+            while(row >= 0){
+
+                Field f_low = fields[col][row + 1];
+                Field f_high = fields[col][row];
+                
+                switch (f_low.addField(f_high)){
+                    case MERGED:
+                        row--;
+                        movedAny = true;
+                        f_low.setMerged(true);
+                        break;
+                    case MOVED:
+                        row++;
+                        movedAny = true;
+                        break;
+                    case NOACTION:
+                        row--;
+                        break;
+                }
+
+                if(row > max){
+                    row = max;
+                }
+            }
+        }
+        System.out.println("moved any: " + movedAny);
+        if(movedAny){
+            startNextRound();
+        }
+        return movedAny;
     }
 
     @Override
     public void restart() {
-        setup();
-    }
-
-    private boolean canMove() {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        this.moves = 0;
+        for (int col = 0; col < SIZE; col++){
+            for (int row = 0; row < SIZE; row++){
+                fields[col][row].restart();
+            }
+        }
+        insertRandom();
+        insertRandom();
     }
 
     private Point[] getPossible() {
@@ -183,5 +281,24 @@ public class Game extends JPanel implements Move{
             result[i] = result_list.get(i);
         }
         return result;
+    }
+
+    private void startNextRound() {
+        setFieldsNewRound();
+        insertRandom();
+    }
+
+    private void setFieldsNewRound() {
+        this.moves++;
+        System.out.println("Moves: " + this.moves + "!");
+        for (int col = 0; col < SIZE; col++){
+            for (int row = 0; row < SIZE; row++){
+                if(fields[col][row].newRound()){
+                    this.moves--;
+                    System.out.println("game won now!");
+                    return;
+                }
+            }
+        }
     }
 }

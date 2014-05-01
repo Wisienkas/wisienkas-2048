@@ -16,6 +16,10 @@ import static javax.swing.JFrame.EXIT_ON_CLOSE;
  */
 public class Application extends JFrame{
     
+    public static final int WINCONDITION_SCORE = 2048;
+    
+    private Game game;
+    
     public Application(){
         setPreferences();
         loadContent();
@@ -30,6 +34,9 @@ public class Application extends JFrame{
 
     private void loadContent() {
         System.out.println("Loading Game...");
-        add(new Game(4));
+        game = new Game(4);
+        add(this.game);
+        System.out.println("Setting MovementListener!");
+        this.addKeyListener(new MovementListener(this.game));
     }
 }

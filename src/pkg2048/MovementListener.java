@@ -8,31 +8,26 @@ package pkg2048;
 
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
 /**
  *
  * @author wisienkas
  */
-public class MovementListener implements KeyListener{
+public class MovementListener extends KeyAdapter{
 
     private Move game;
     
     public MovementListener(Move m){
+        super();
+        System.out.println("MovementListener Setup...");
         this.game = m;
-    }
-    
-    @Override
-    public void keyTyped(KeyEvent e) {
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-                int code = e.getKeyCode();
+        System.out.println("Key Released");
+        System.out.println(e.getKeyChar());
+        int code = e.getKeyCode();
         if(code == KeyEvent.VK_A || code == KeyEvent.VK_LEFT){
             System.out.println("left");
             game.left();
@@ -50,7 +45,4 @@ public class MovementListener implements KeyListener{
             game.restart();
         }
     }
-    
-    
-    
 }

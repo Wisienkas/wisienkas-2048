@@ -14,7 +14,12 @@ import java.awt.geom.Point2D;
  * @author wisienkas
  */
 class Field {
+
+    public enum action{
+        MERGED, MOVED, NOACTION;
+    }
     
+    private boolean movedThisRound;
     private int value;
     private final Point pos;
     
@@ -35,13 +40,19 @@ class Field {
         return this.value != 0;
     }
     
-    public boolean addField(Field f){
-        if(f.value == this.value){
+    public action addField(Field f){
+        if(!f.hasValue() || f.hasMerged()){
+            return action.NOACTION;
+        }else if(f.value == this.value){
             this.value *= 2;
             f.value = 0;
-            return true;
+            return action.MERGED;
+        }else if(this.value == 0){
+            this.value = f.value;
+            f.value = 0;
+            return action.MOVED;
         }
-        return false;
+        return action.NOACTION;
     }
     
     public boolean tryTouch(){
@@ -51,6 +62,29 @@ class Field {
             this.value = 2;
             return true;
         }
+    }
+    
+    public void setMerged(boolean moved) {
+        this.movedThisRound = moved;
+    }
+    
+    public boolean hasMerged(){
+        return this.movedThisRound;
+    }
+    
+    public boolean newRound() {
+        this.movedThisRound = false;
+        if(this.value == Application.WINCONDITION_SCORE){
+            System.out.println("GAME WON!!");
+            return true;
+        }else{
+            return false;
+        }
+    }
+    
+    void restart() {
+        this.value = 0;
+        this.movedThisRound = false;
     }
     
 }
